@@ -308,7 +308,6 @@ const [isAdmin, setIsAdmin] = useState(true); // Always admin
 
 ---
 
-**Developed by:** [Trojanx](https://trojanx.in)  
 **For:** [Pristonix](https://pristonix.com)
 
 **Status**: ✅ **ADMIN SECURITY ENHANCEMENTS COMPLETE**

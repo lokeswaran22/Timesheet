@@ -129,4 +129,3 @@ node server.js
 ## License
 
 © 2025 Pristonix - All Rights Reserved
-Designed by Trojanx

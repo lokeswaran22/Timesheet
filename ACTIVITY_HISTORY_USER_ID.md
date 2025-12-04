@@ -204,7 +204,6 @@ To see username for an ID:
 
 ---
 
-**Developed by:** [Trojanx](https://trojanx.in)  
 **For:** [Pristonix](https://pristonix.com)
 
 **Status**: ✅ **ACTIVITY HISTORY USER ID TRACKING COMPLETE**

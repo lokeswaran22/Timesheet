@@ -283,7 +283,6 @@ Delete lines 54-62 in `AdminAuth.jsx`
 
 ---
 
-**Developed by:** [Trojanx](https://trojanx.in)  
 **For:** [Pristonix](https://pristonix.com)
 
 **Status**: ✅ **ADMIN PANEL PASSWORD PROTECTION COMPLETE**

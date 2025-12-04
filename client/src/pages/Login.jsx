@@ -61,9 +61,20 @@ function Login() {
 
     return (
         <div className="login-container">
-            <div className="login-box">
-                <div className="login-header">
-                    <h1>🕐 Timesheet Tracker</h1>
+            <div className="login-box" style={{ maxWidth: '420px' }}>
+                <div className="login-header" style={{ textAlign: 'center' }}>
+                    <img
+                        src="/images/logogo.jpg"
+                        alt="Pristonix"
+                        width="120"
+                        height="80"
+                        style={{
+                            borderRadius: '12px',
+                            marginBottom: '1rem',
+                            boxShadow: '0 8px 24px rgba(212, 175, 55, 0.25)'
+                        }}
+                    />
+                    <h1>Timesheet Tracker</h1>
                     <p>{isRegistering ? 'Create New Account' : 'Welcome Back'}</p>
                 </div>
 

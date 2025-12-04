@@ -269,7 +269,7 @@ body {
     background: var(--bg-card);
     backdrop-filter: blur(20px);
     border: 2px solid var(--royal-gold);
-    border-radius: var(--border-radius-xl);
+    border-radius: var(--border-radius-lg);
     padding: var(--spacing-2xl);
     margin-bottom: var(--spacing-2xl);
     box-shadow: var(--shadow-luxury);

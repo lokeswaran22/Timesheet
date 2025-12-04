@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import AdminAuth from '../components/AdminAuth';
 import EmployeeModal from '../components/EmployeeModal';
+import ConfirmModal from '../components/ConfirmModal';
 import '../style.css';
 import '../admin.css';
 
@@ -22,6 +23,13 @@ function AdminPanel() {
     const [activeTab, setActiveTab] = useState('employees');
     const [sessionTimeLeft, setSessionTimeLeft] = useState(null);
     const [editingEmployee, setEditingEmployee] = useState(null);
+    const [confirmModal, setConfirmModal] = useState({
+        show: false,
+        title: '',
+        message: '',
+        onConfirm: () => { },
+        isDangerous: false
+    });
 
     // ... existing useEffect ...
 
@@ -85,14 +93,17 @@ function AdminPanel() {
         setShowEmployeeModal(true);
     };
 
-    const handleDeleteEmployee = async (id) => {
-        console.log('Delete employee clicked:', id);
-        if (!window.confirm('Are you sure you want to delete this employee? All their activities will also be deleted.')) {
-            console.log('Delete cancelled');
-            return;
-        }
-        console.log('Proceeding with delete');
+    const handleDeleteEmployee = (id) => {
+        setConfirmModal({
+            show: true,
+            title: 'Delete Employee',
+            message: 'Are you sure you want to delete this employee? All their activities will also be deleted.',
+            onConfirm: () => executeDeleteEmployee(id),
+            isDangerous: true
+        });
+    };
 
+    const executeDeleteEmployee = async (id) => {
         try {
             const res = await fetch(`/api/employees/${id}`, {
                 method: 'DELETE'
@@ -123,6 +134,7 @@ function AdminPanel() {
             console.error('Error deleting employee:', e);
             alert('Error deleting employee');
         }
+        setConfirmModal(prev => ({ ...prev, show: false }));
     };
 
     // ... existing handlers ...
@@ -254,14 +266,17 @@ function AdminPanel() {
     };
 
 
-    const handleClearActivityLog = async () => {
-        console.log('Clear activity log clicked');
-        if (!window.confirm('Clear all activity history? This cannot be undone.')) {
-            console.log('Clear cancelled');
-            return;
-        }
-        console.log('Proceeding with clear');
+    const handleClearActivityLog = () => {
+        setConfirmModal({
+            show: true,
+            title: 'Clear Activity Log',
+            message: 'Clear all activity history? This cannot be undone.',
+            onConfirm: executeClearActivityLog,
+            isDangerous: true
+        });
+    };
 
+    const executeClearActivityLog = async () => {
         try {
             const res = await fetch('/api/activity-log', { method: 'DELETE' });
             if (res.ok) {
@@ -271,12 +286,20 @@ function AdminPanel() {
         } catch (error) {
             alert('Error clearing activity log');
         }
+        setConfirmModal(prev => ({ ...prev, show: false }));
     };
 
-    const handleCleanupEmployees = async () => {
-        if (!confirm('WARNING: This will delete ALL employees and activities. Are you sure?')) return;
-        if (!confirm('This action cannot be undone. Proceed?')) return;
+    const handleCleanupEmployees = () => {
+        setConfirmModal({
+            show: true,
+            title: 'DELETE ALL DATA',
+            message: 'WARNING: This will delete ALL employees and activities. This action cannot be undone. Are you absolutely sure?',
+            onConfirm: executeCleanupEmployees,
+            isDangerous: true
+        });
+    };
 
+    const executeCleanupEmployees = async () => {
         try {
             const res = await fetch('/api/cleanup-employees', { method: 'POST' });
             if (res.ok) {
@@ -286,19 +309,25 @@ function AdminPanel() {
         } catch (error) {
             alert('Error cleaning up employees');
         }
+        setConfirmModal(prev => ({ ...prev, show: false }));
     };
 
     const handleLogout = () => {
-        console.log('Logout clicked');
-        if (window.confirm('Are you sure you want to logout?')) {
-            console.log('Logout confirmed');
-            localStorage.removeItem('user');
-            localStorage.removeItem('userId');
-            localStorage.removeItem('username');
-            sessionStorage.removeItem('adminAuth');
-            sessionStorage.removeItem('adminAuthTime');
-            navigate('/login');
-        }
+        setConfirmModal({
+            show: true,
+            title: 'Confirm Logout',
+            message: 'Are you sure you want to logout?',
+            onConfirm: () => {
+                localStorage.removeItem('user');
+                localStorage.removeItem('userId');
+                localStorage.removeItem('username');
+                sessionStorage.removeItem('adminAuth');
+                sessionStorage.removeItem('adminAuthTime');
+                navigate('/login');
+                setConfirmModal(prev => ({ ...prev, show: false }));
+            },
+            isDangerous: false
+        });
     };
 
     // Show admin authentication screen if not authenticated
@@ -526,6 +555,16 @@ function AdminPanel() {
                         setEditingEmployee(null);
                     }}
                     onSave={handleAddEmployee}
+                />
+            )}
+
+            {confirmModal.show && (
+                <ConfirmModal
+                    title={confirmModal.title}
+                    message={confirmModal.message}
+                    onConfirm={confirmModal.onConfirm}
+                    onCancel={() => setConfirmModal(prev => ({ ...prev, show: false }))}
+                    isDangerous={confirmModal.isDangerous}
                 />
             )}
         </div>

@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import '../style.css';
 import '../reminder.css';
 import '../activity-tracker.css';
+import '../daily-timesheet.css';
 import Header from '../components/Header';
 import DateSelector from '../components/DateSelector';
 import TimesheetTable from '../components/TimesheetTable';
@@ -12,6 +13,7 @@ import EmployeeActionModal from '../components/EmployeeActionModal';
 import Preloader from '../components/Preloader';
 import ReminderSystem from '../components/ReminderSystem';
 import StatusToast from '../components/StatusToast';
+import ConfirmModal from '../components/ConfirmModal';
 
 function Dashboard() {
     const [employees, setEmployees] = useState([]);
@@ -26,6 +28,13 @@ function Dashboard() {
     const [statusMessage, setStatusMessage] = useState(null);
     const [activityLog, setActivityLog] = useState([]);
     const [isAdmin, setIsAdmin] = useState(false);
+    const [confirmModal, setConfirmModal] = useState({
+        show: false,
+        title: '',
+        message: '',
+        onConfirm: () => { },
+        isDangerous: false
+    });
 
     const timeSlots = [
         '9:00-10:00', '10:00-11:00', '11:00-11:10', '11:10-12:00',
@@ -193,38 +202,47 @@ function Dashboard() {
         }
     };
 
-    const deleteEmployee = async (id) => {
-        if (confirm('Are you sure you want to delete this employee? All their activities will be removed.')) {
-            try {
-                const res = await fetch(`/api/employees/${id}`, { method: 'DELETE' });
-                if (res.ok) {
-                    const empName = employees.find(e => e.id === id)?.name || 'Unknown';
-                    setEmployees(employees.filter(emp => emp.id !== id));
+    const deleteEmployee = (id) => {
+        setConfirmModal({
+            show: true,
+            title: 'Delete Employee',
+            message: 'Are you sure you want to delete this employee? All their activities will be removed.',
+            onConfirm: () => executeDeleteEmployee(id),
+            isDangerous: true
+        });
+    };
 
-                    // Log action
-                    await fetch('/api/activity-log', {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({
-                            dateKey: getDateKey(currentDate),
-                            employeeName: empName,
-                            activityType: 'other',
-                            description: 'Employee deleted',
-                            timeSlot: '-',
-                            action: 'cleared',
-                            editedBy: getCurrentUsername(),
-                            timestamp: new Date().toISOString()
-                        })
-                    });
-                    loadActivityLog();
+    const executeDeleteEmployee = async (id) => {
+        try {
+            const res = await fetch(`/api/employees/${id}`, { method: 'DELETE' });
+            if (res.ok) {
+                const empName = employees.find(e => e.id === id)?.name || 'Unknown';
+                setEmployees(employees.filter(emp => emp.id !== id));
 
-                    showStatus('Employee deleted');
-                }
-            } catch (e) {
-                console.error('Error deleting employee:', e);
-                showStatus('Error deleting employee', 'error');
+                // Log action
+                await fetch('/api/activity-log', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        dateKey: getDateKey(currentDate),
+                        employeeName: empName,
+                        activityType: 'other',
+                        description: 'Employee deleted',
+                        timeSlot: '-',
+                        action: 'cleared',
+                        editedBy: getCurrentUsername(),
+                        timestamp: new Date().toISOString()
+                    })
+                });
+                loadActivityLog();
+
+                showStatus('Employee deleted');
             }
+        } catch (e) {
+            console.error('Error deleting employee:', e);
+            showStatus('Error deleting employee', 'error');
         }
+        setConfirmModal(prev => ({ ...prev, show: false }));
     };
 
     const setActivity = async (employeeId, timeSlot, activityData) => {
@@ -349,49 +367,61 @@ function Dashboard() {
                 isAdmin={isAdmin}
             />
 
+
             <main className="main-content">
                 <div className="container">
-                    <DateSelector
-                        currentDate={currentDate}
-                        onDateChange={setCurrentDate}
-                    />
+                    <div className="daily-timesheet-container">
+                        <DateSelector
+                            currentDate={currentDate}
+                            onDateChange={setCurrentDate}
+                        />
 
-                    <TimesheetTable
-                        employees={employees}
-                        activities={activities}
-                        currentDate={currentDate}
-                        timeSlots={timeSlots}
-                        getDateKey={getDateKey}
-                        onEditEmployee={(id) => {
-                            setEditingEmployeeId(id);
-                            setShowEmployeeModal(true);
-                        }}
-                        onDeleteEmployee={deleteEmployee}
-                        onOpenActivity={(employeeId, timeSlot) => {
-                            setSelectedEmployee(employeeId);
-                            setSelectedTimeSlot(timeSlot);
-                            setShowActivityModal(true);
-                        }}
-                        onOpenEmployeeAction={(employeeId) => {
-                            setSelectedEmployee(employeeId);
-                            setShowEmployeeActionModal(true);
-                        }}
-                    />
+                        <TimesheetTable
+                            employees={employees}
+                            activities={activities}
+                            currentDate={currentDate}
+                            timeSlots={timeSlots}
+                            getDateKey={getDateKey}
+                            isAdmin={isAdmin}
+                            onEditEmployee={(id) => {
+                                setEditingEmployeeId(id);
+                                setShowEmployeeModal(true);
+                            }}
+                            onDeleteEmployee={deleteEmployee}
+                            onOpenActivity={(employeeId, timeSlot) => {
+                                setSelectedEmployee(employeeId);
+                                setSelectedTimeSlot(timeSlot);
+                                setShowActivityModal(true);
+                            }}
+                            onOpenEmployeeAction={(employeeId) => {
+                                setSelectedEmployee(employeeId);
+                                setShowEmployeeActionModal(true);
+                            }}
+                        />
 
-                    <ActivityTracker
-                        activities={activityLog}
-                        currentDate={currentDate}
-                        onClear={async () => {
-                            if (confirm('Clear all activity history? This will permanently delete all logged activities.')) {
-                                try {
-                                    await fetch('/api/activity-log', { method: 'DELETE' });
-                                    setActivityLog([]);
-                                } catch (error) {
-                                    console.error('Error clearing activity log:', error);
-                                }
-                            }
-                        }}
-                    />
+                        <ActivityTracker
+                            activities={activityLog}
+                            currentDate={currentDate}
+                            isAdmin={isAdmin}
+                            onClear={() => {
+                                setConfirmModal({
+                                    show: true,
+                                    title: 'Clear History',
+                                    message: 'Clear all activity history? This will permanently delete all logged activities.',
+                                    onConfirm: async () => {
+                                        try {
+                                            await fetch('/api/activity-log', { method: 'DELETE' });
+                                            setActivityLog([]);
+                                        } catch (error) {
+                                            console.error('Error clearing activity log:', error);
+                                        }
+                                        setConfirmModal(prev => ({ ...prev, show: false }));
+                                    },
+                                    isDangerous: true
+                                });
+                            }}
+                        />
+                    </div>
                 </div>
             </main>
 
@@ -420,11 +450,18 @@ function Dashboard() {
                         await setActivity(selectedEmployee, selectedTimeSlot, activityData);
                         setShowActivityModal(false);
                     }}
-                    onClear={async () => {
-                        if (confirm('Are you sure you want to clear this activity?')) {
-                            await clearActivity(selectedEmployee, selectedTimeSlot);
-                            setShowActivityModal(false);
-                        }
+                    onClear={() => {
+                        setConfirmModal({
+                            show: true,
+                            title: 'Clear Activity',
+                            message: 'Are you sure you want to clear this activity?',
+                            onConfirm: async () => {
+                                await clearActivity(selectedEmployee, selectedTimeSlot);
+                                setShowActivityModal(false);
+                                setConfirmModal(prev => ({ ...prev, show: false }));
+                            },
+                            isDangerous: true
+                        });
                     }}
                 />
             )}
@@ -471,9 +508,19 @@ function Dashboard() {
                 <StatusToast message={statusMessage.message} type={statusMessage.type} />
             )}
 
+            {confirmModal.show && (
+                <ConfirmModal
+                    title={confirmModal.title}
+                    message={confirmModal.message}
+                    onConfirm={confirmModal.onConfirm}
+                    onCancel={() => setConfirmModal(prev => ({ ...prev, show: false }))}
+                    isDangerous={confirmModal.isDangerous}
+                />
+            )}
+
             <div className="footer">
-                <a href="https://pristonix.com" className="foot2">Pristonix</a> © 2025 - All Right Reserved.<br />
-                Developed by <b><a href="https://trojanx.in" className="foot">Trojan x</a></b>
+                <a href="https://pristonix.com" className="foot2">Pristonix</a> © 2025 - All Right Reserved.<br /> designed
+                by <b><a href="https://trojanx.in" className="foot">Trojan<span className="foot1">x</span></a></b>
             </div>
         </>
     );

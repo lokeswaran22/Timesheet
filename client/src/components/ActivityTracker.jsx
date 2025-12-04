@@ -1,4 +1,4 @@
-function ActivityTracker({ activities, currentDate, onClear }) {
+function ActivityTracker({ activities, currentDate, onClear, isAdmin }) {
     const formatTimeAgo = (dateString) => {
         const date = new Date(dateString);
         const seconds = Math.floor((new Date() - date) / 1000);
@@ -95,13 +95,15 @@ function ActivityTracker({ activities, currentDate, onClear }) {
                     </svg>
                     <h3>Activity History</h3>
                 </div>
-                <button className="clear-tracker-btn" onClick={onClear} title="Clear History">
-                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                        <path d="M3 6h18"></path>
-                        <path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"></path>
-                        <path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"></path>
-                    </svg>
-                </button>
+                {isAdmin && (
+                    <button className="clear-tracker-btn" onClick={onClear} title="Clear History">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                            <path d="M3 6h18"></path>
+                            <path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"></path>
+                            <path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"></path>
+                        </svg>
+                    </button>
+                )}
             </div>
             <div className="activity-tracker-list">
                 {activities.length === 0 ? (

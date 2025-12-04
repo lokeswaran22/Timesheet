@@ -4,18 +4,38 @@ function ActivityModal({ employee, timeSlot, activity, onClose, onSave, onClear 
     const [activityType, setActivityType] = useState('epub');
     const [description, setDescription] = useState('');
     const [pagesDone, setPagesDone] = useState('');
+    const [totalPages, setTotalPages] = useState('');
+    const [startPage, setStartPage] = useState('');
+    const [endPage, setEndPage] = useState('');
 
     useEffect(() => {
         if (activity) {
             setActivityType(activity.type);
             setDescription(activity.description || '');
             setPagesDone(activity.pagesDone || '');
+            setTotalPages(activity.totalPages || '');
+            setStartPage(activity.startPage || '');
+            setEndPage(activity.endPage || '');
         } else {
             setActivityType('epub');
             setDescription('');
             setPagesDone('');
+            setTotalPages('');
+            setStartPage('');
+            setEndPage('');
         }
     }, [activity]);
+
+    // Calculate pages done when start or end page changes
+    useEffect(() => {
+        if (startPage && endPage) {
+            const start = parseInt(startPage);
+            const end = parseInt(endPage);
+            if (!isNaN(start) && !isNaN(end) && end >= start) {
+                setPagesDone((end - start + 1).toString());
+            }
+        }
+    }, [startPage, endPage]);
 
     const showPageFields = activityType === 'proof' || activityType === 'epub' || activityType === 'calibr';
 
@@ -34,7 +54,29 @@ function ActivityModal({ employee, timeSlot, activity, onClose, onSave, onClear 
         };
 
         if (showPageFields) {
+            if (!pagesDone) {
+                alert('Please enter start and end pages');
+                return;
+            }
             activityData.pagesDone = pagesDone;
+            if (totalPages) activityData.totalPages = totalPages;
+            if (startPage) activityData.startPage = startPage;
+            if (endPage) activityData.endPage = endPage;
+
+            // Append page range to description if start and end pages are provided
+            // Handle page range in description
+            if (startPage && endPage) {
+                const rangeText = `(p.${startPage}-${endPage})`;
+
+                // Remove any existing page range pattern like (p.X-Y)
+                let cleanDescription = description.replace(/\(p\.\d+-\d+\)/g, '').trim();
+
+                if (cleanDescription) {
+                    activityData.description = `${cleanDescription} ${rangeText}`;
+                } else {
+                    activityData.description = rangeText;
+                }
+            }
         }
 
         onSave(activityData);
@@ -100,17 +142,49 @@ function ActivityModal({ employee, timeSlot, activity, onClose, onSave, onClear 
                         </div>
 
                         {showPageFields && (
-                            <div className="form-group">
-                                <label htmlFor="pagesDone">Pages Completed</label>
-                                <input
-                                    type="number"
-                                    id="pagesDone"
-                                    className="form-input"
-                                    placeholder="Enter pages completed in this time slot"
-                                    value={pagesDone}
-                                    onChange={(e) => setPagesDone(e.target.value)}
-                                />
-                            </div>
+                            <>
+                                <div className="form-group">
+                                    <label htmlFor="totalPages">Total Pages (Optional)</label>
+                                    <input
+                                        type="number"
+                                        id="totalPages"
+                                        className="form-input"
+                                        placeholder="Enter total pages assigned"
+                                        value={totalPages}
+                                        onChange={(e) => setTotalPages(e.target.value)}
+                                    />
+                                </div>
+                                <div className="form-group">
+                                    <label htmlFor="pagesDone">Pages Completed <span style={{ color: 'red' }}>*</span></label>
+                                    <div style={{ display: 'flex', gap: '10px', marginBottom: '10px' }}>
+                                        <input
+                                            type="number"
+                                            id="startPage"
+                                            className="form-input"
+                                            placeholder="Start Page"
+                                            value={startPage}
+                                            onChange={(e) => setStartPage(e.target.value)}
+                                        />
+                                        <input
+                                            type="number"
+                                            id="endPage"
+                                            className="form-input"
+                                            placeholder="End Page"
+                                            value={endPage}
+                                            onChange={(e) => setEndPage(e.target.value)}
+                                        />
+                                    </div>
+                                    <input
+                                        type="number"
+                                        id="pagesDone"
+                                        className="form-input"
+                                        placeholder="Calculated Pages"
+                                        value={pagesDone}
+                                        readOnly
+                                        style={{ backgroundColor: '#f3f4f6', cursor: 'not-allowed' }}
+                                    />
+                                </div>
+                            </>
                         )}
 
                         <div className="form-actions" style={{ justifyContent: 'space-between' }}>

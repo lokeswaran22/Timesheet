@@ -74,7 +74,7 @@ function AdminAuth({ onSuccess }) {
                 </form>
 
                 <div className="login-footer">
-                    <p>Developed by <a href="https://trojanx.in" target="_blank" rel="noopener noreferrer"><b>Trojan x</b></a></p>
+                    <p>© 2025 Pristonix - All Rights Reserved</p>
                 </div>
             </div>
         </div>

@@ -170,5 +170,4 @@ For issues or questions, check:
 
 ---
 
-**Developed by:** [Trojanx](https://trojanx.in)  
 **For:** [Pristonix](https://pristonix.com)

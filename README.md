@@ -203,20 +203,6 @@ DB_NAME=timesheet_db
 ## 🤝 Contributing
 
 Contributions are welcome! Please feel free to submit a Pull Request.
-
-## 📄 License
-
-ISC License
-
-## 👨‍💻 Developer
-
-**Developed by:** [Trojanx](https://trojanx.in)  
-**For:** [Pristonix](https://pristonix.com)
-
-## 📧 Support
-
-For issues or questions:
-1. Check the troubleshooting section
 2. Verify all dependencies are installed
 3. Ensure the database is properly initialized
 4. Check that no other application is using port 3000

@@ -226,7 +226,6 @@ The system includes these predefined employees:
 
 ---
 
-**Developed by:** [Trojanx](https://trojanx.in)  
 **For:** [Pristonix](https://pristonix.com)
 
 **Status**: ✅ **FULLY OPERATIONAL**  

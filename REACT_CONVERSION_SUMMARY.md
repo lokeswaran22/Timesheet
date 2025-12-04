@@ -231,6 +231,5 @@ Your application is now using modern React! Enjoy the improved development exper
 
 **Made with ❤️ by converting your vanilla JS to React**
 
-**Original Design**: Trojanx  
 **Conversion**: Complete React Migration  
 **© 2025 Pristonix - All Rights Reserved**

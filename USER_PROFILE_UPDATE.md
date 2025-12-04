@@ -268,7 +268,6 @@ The new profile design follows modern UI/UX principles:
 
 ---
 
-**Developed by:** [Trojanx](https://trojanx.in)  
 **For:** [Pristonix](https://pristonix.com)
 
 **Status**: ✅ **USER PROFILE UI UPDATE COMPLETE**

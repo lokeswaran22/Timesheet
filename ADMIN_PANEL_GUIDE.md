@@ -284,7 +284,6 @@ From Admin Panel:
 
 ---
 
-**Developed by:** [Trojanx](https://trojanx.in)  
 **For:** [Pristonix](https://pristonix.com)
 
 **Status**: ✅ **ADMIN PANEL COMPLETE AND OPERATIONAL**

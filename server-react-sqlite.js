@@ -257,9 +257,29 @@ app.get('/api/activities', async (req, res) => {
                 description: row.description,
                 totalPages: row.totalPages,
                 pagesDone: row.pagesDone,
-                timestamp: row.timestamp
+                timestamp: row.timestamp,
+                startPage: row.startPage,
+                endPage: row.endPage
             };
         });
+
+        // Add default lunch for all employees if not set
+        const employees = await all('SELECT id FROM employees');
+        const lunchSlot = '01:00-01:40';
+
+        if (dateKey) {
+            if (!activities[dateKey]) activities[dateKey] = {};
+            employees.forEach(emp => {
+                if (!activities[dateKey][emp.id]) activities[dateKey][emp.id] = {};
+                if (!activities[dateKey][emp.id][lunchSlot]) {
+                    activities[dateKey][emp.id][lunchSlot] = {
+                        type: 'lunch',
+                        description: 'LUNCH',
+                        timestamp: new Date().toISOString()
+                    };
+                }
+            });
+        }
 
         res.json(activities);
     } catch (err) {

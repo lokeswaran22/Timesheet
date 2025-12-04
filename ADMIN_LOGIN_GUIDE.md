@@ -207,7 +207,6 @@ The login page and user info are fully responsive:
 
 ---
 
-**Developed by:** [Trojanx](https://trojanx.in)  
 **For:** [Pristonix](https://pristonix.com)
 
 **Status**: ✅ **AUTHENTICATION SYSTEM COMPLETE**
