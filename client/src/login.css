@@ -289,7 +289,11 @@
     }
 
     .logo-text {
+<<<<<<< HEAD
         font-size: 2.5rem;
+=======
+        font-size: 1.5rem;
+>>>>>>> f6b91d6479e0ced31baca88e9ab088639b50de38
     }
 
     .login-title {

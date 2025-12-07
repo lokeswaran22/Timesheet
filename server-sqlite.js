@@ -516,8 +516,13 @@ app.get('/login', (req, res) => {
     res.sendFile(path.join(__dirname, 'login.html'));
 });
 
+<<<<<<< HEAD
 // Serve main page (SPA catch-all)
 app.use((req, res) => {
+=======
+// Serve main page
+app.get('/', (req, res) => {
+>>>>>>> f6b91d6479e0ced31baca88e9ab088639b50de38
     res.sendFile(path.join(__dirname, 'index.html'));
 });
 

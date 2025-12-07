@@ -145,7 +145,11 @@ body {
 
 .logo-text {
     font-family: var(--font-display);
+<<<<<<< HEAD
     font-size: 2.5rem;
+=======
+    font-size: 1.5rem;
+>>>>>>> f6b91d6479e0ced31baca88e9ab088639b50de38
     font-weight: 700;
     color: var(--neutral-900);
     letter-spacing: -0.025em;
@@ -1008,7 +1012,11 @@ body {
     }
 
     .logo-text {
+<<<<<<< HEAD
         font-size: 2.25rem;
+=======
+        font-size: 1.25rem;
+>>>>>>> f6b91d6479e0ced31baca88e9ab088639b50de38
     }
 
     .header-actions {

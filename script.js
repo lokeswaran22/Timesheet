@@ -444,6 +444,7 @@ class TimesheetManager {
                 if (mainContainer) mainContainer.classList.remove('employee-view-centered');
             }
 
+<<<<<<< HEAD
             // === EMPLOYEE HORIZONTAL VIEW ===
             if (isEmployee) {
                 // Show standard thead for Horizontal View
@@ -630,6 +631,44 @@ class TimesheetManager {
         } catch (e) {
             console.error('CRITICAL RENDER ERROR:', e);
             alert('CRITICAL ERROR RENDER: ' + e.message);
+=======
+            // Actions Cell
+            const currentUser = JSON.parse(localStorage.getItem('currentUser') || '{}');
+            if (currentUser.role === 'admin') {
+                const actionsCell = document.createElement('td');
+                actionsCell.className = 'actions-col';
+                actionsCell.innerHTML = `
+                    <div class="action-buttons">
+                        <button class="icon-btn edit" data-action="edit" data-employee-id="${employee.id}" title="Edit Employee">
+                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/>
+                                <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/>
+                            </svg>
+                        </button>
+                        <button class="icon-btn delete" data-action="delete" data-employee-id="${employee.id}" title="Delete Employee">
+                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M3 6h18M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/>
+                            </svg>
+                        </button>
+                    </div>
+                `;
+                row.appendChild(actionsCell);
+            }
+            // End Actions Cell Logic
+
+            tbody.appendChild(row);
+        });
+
+        // Handle Header Visibility
+        const actionsHeader = document.querySelector('.timesheet-table th:last-child');
+        const currentUser = JSON.parse(localStorage.getItem('currentUser') || '{}');
+        if (actionsHeader) {
+            if (currentUser.role === 'admin') {
+                actionsHeader.style.display = '';
+            } else {
+                actionsHeader.style.display = 'none';
+            }
+>>>>>>> f6b91d6479e0ced31baca88e9ab088639b50de38
         }
     }
 
@@ -646,6 +685,10 @@ class TimesheetManager {
                 ? `<div class="activity-description">${activity.description}</div>`
                 : '';
 
+<<<<<<< HEAD
+=======
+            // Format timestamp if present
+>>>>>>> f6b91d6479e0ced31baca88e9ab088639b50de38
             let timestampHtml = '';
             if (activity.timestamp) {
                 const time = new Date(activity.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
@@ -1542,8 +1585,13 @@ class ActivityTracker {
                 return;
             }
 
+<<<<<<< HEAD
             clearBtn.addEventListener('click', () => {
                 const doClear = async () => {
+=======
+            clearBtn.addEventListener('click', async () => {
+                if (confirm('Clear all activity history? This will permanently delete all logged activities.')) {
+>>>>>>> f6b91d6479e0ced31baca88e9ab088639b50de38
                     try {
                         const response = await fetch('/api/activity-log', {
                             method: 'DELETE'
