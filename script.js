@@ -646,6 +646,7 @@ class TimesheetManager {
                 ? `<div class="activity-description">${activity.description}</div>`
                 : '';
 
+
             let timestampHtml = '';
             if (activity.timestamp) {
                 const time = new Date(activity.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
