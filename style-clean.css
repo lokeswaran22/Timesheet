@@ -240,6 +240,7 @@ body {
    CARDS
    ========================================== */
 .date-selector-card,
+.activity-tracker-card,
 .timesheet-container {
     background: var(--white);
     border: 1px solid var(--neutral-200);
@@ -247,18 +248,6 @@ body {
     padding: var(--space-6);
     margin-bottom: var(--space-6);
     box-shadow: var(--shadow-sm);
-}
-
-.activity-tracker-card {
-    background: var(--white);
-    border: 1px solid var(--neutral-200);
-    border-radius: var(--radius-xl);
-    padding: var(--space-6);
-    margin-bottom: var(--space-6);
-    box-shadow: var(--shadow-sm);
-    max-width: 600px;
-    margin-left: auto;
-    margin-right: auto;
 }
 
 .date-selector {

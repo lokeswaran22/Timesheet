@@ -165,10 +165,12 @@ class TimesheetManager {
     }
 
     // Employee Methods
-    async addEmployee(name, skipRender = false) {
+    async addEmployee(name, username, password, skipRender = false) {
         const employee = {
             id: Date.now().toString() + Math.random().toString(36).substr(2, 5),
             name: name.trim(),
+            username: username,
+            password: password,
             createdAt: new Date().toISOString()
         };
 
@@ -180,9 +182,14 @@ class TimesheetManager {
             });
 
             if (res.ok) {
-                this.employees.push(employee);
+                // We don't store username/password in local state for security, just the employee record
+                const { username, password, ...safeEmployee } = employee;
+                this.employees.push(safeEmployee);
                 if (!skipRender) this.renderTimesheet();
                 this.showStatus('Employee saved');
+            } else {
+                const data = await res.json();
+                alert(data.error || 'Error saving employee');
             }
         } catch (e) {
             console.error('Error adding employee:', e);
@@ -190,15 +197,19 @@ class TimesheetManager {
         }
     }
 
-    async updateEmployee(id, name) {
+    async updateEmployee(id, name, username, password) {
         const employee = this.employees.find(emp => emp.id === id);
         if (employee) {
             employee.name = name.trim();
+            const payload = { ...employee };
+            if (username) payload.username = username;
+            if (password) payload.password = password;
+
             try {
                 const res = await fetch('/api/employees', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify(employee)
+                    body: JSON.stringify(payload)
                 });
 
                 if (res.ok) {
@@ -458,27 +469,42 @@ class TimesheetManager {
             }
 
             // Actions Cell
-            const actionsCell = document.createElement('td');
-            actionsCell.className = 'actions-col';
-            actionsCell.innerHTML = `
-                <div class="action-buttons">
-                    <button class="icon-btn edit" data-action="edit" data-employee-id="${employee.id}" title="Edit Employee">
-                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                            <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/>
-                            <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/>
-                        </svg>
-                    </button>
-                    <button class="icon-btn delete" data-action="delete" data-employee-id="${employee.id}" title="Delete Employee">
-                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                            <path d="M3 6h18M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/>
-                        </svg>
-                    </button>
-                </div>
-            `;
-            row.appendChild(actionsCell);
+            const currentUser = JSON.parse(localStorage.getItem('currentUser') || '{}');
+            if (currentUser.role === 'admin') {
+                const actionsCell = document.createElement('td');
+                actionsCell.className = 'actions-col';
+                actionsCell.innerHTML = `
+                    <div class="action-buttons">
+                        <button class="icon-btn edit" data-action="edit" data-employee-id="${employee.id}" title="Edit Employee">
+                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/>
+                                <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/>
+                            </svg>
+                        </button>
+                        <button class="icon-btn delete" data-action="delete" data-employee-id="${employee.id}" title="Delete Employee">
+                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M3 6h18M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/>
+                            </svg>
+                        </button>
+                    </div>
+                `;
+                row.appendChild(actionsCell);
+            }
+            // End Actions Cell Logic
 
             tbody.appendChild(row);
         });
+
+        // Handle Header Visibility
+        const actionsHeader = document.querySelector('.timesheet-table th:last-child');
+        const currentUser = JSON.parse(localStorage.getItem('currentUser') || '{}');
+        if (actionsHeader) {
+            if (currentUser.role === 'admin') {
+                actionsHeader.style.display = '';
+            } else {
+                actionsHeader.style.display = 'none';
+            }
+        }
     }
 
     createActivityCell(employeeId, timeSlot) {
@@ -497,9 +523,17 @@ class TimesheetManager {
                 ? `<div class="activity-description">${activity.description}</div>`
                 : '';
 
+            // Format timestamp if present
+            let timestampHtml = '';
+            if (activity.timestamp) {
+                const time = new Date(activity.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+                timestampHtml = `<div class="activity-timestamp" style="font-size: 0.7em; color: #666; text-align: right; margin-top: 4px;">Updated: ${time}</div>`;
+            }
+
             div.innerHTML = `
                 <div class="activity-type-badge ${activity.type}">${activity.type}</div>
                 ${descriptionHtml}
+                ${timestampHtml}
             `;
         } else {
             div.classList.add('empty');
@@ -565,6 +599,33 @@ class TimesheetManager {
         if (hiddenInput) hiddenInput.value = '';
     }
 
+    // prevent admin from editing employee name
+    openEmployeeModal(employeeId = null) {
+        // ADMIN READ-ONLY CHECK for Employee Name
+        const currentUser = JSON.parse(localStorage.getItem('currentUser') || '{}');
+
+        // If admin tries to edit, allow it (Admin manages users). 
+        // If employee tries to edit themselves? Usually blocked by UI, but good to check.
+
+        const modal = document.getElementById('employeeModal');
+        const modalTitle = document.getElementById('modalTitle');
+        const employeeNameInput = document.getElementById('employeeName');
+
+        this.editingEmployeeId = employeeId;
+
+        if (employeeId) {
+            const employee = this.employees.find(emp => emp.id === employeeId);
+            modalTitle.textContent = 'Edit Employee';
+            employeeNameInput.value = employee.name;
+        } else {
+            modalTitle.textContent = 'Add Employee';
+            employeeNameInput.value = '';
+        }
+
+        modal.classList.add('show');
+        employeeNameInput.focus();
+    }
+
     openActivityModal(employeeId, timeSlot) {
         console.log('openActivityModal called with:', { employeeId, timeSlot });
 
@@ -618,8 +679,35 @@ class TimesheetManager {
         }
 
         this.updateActivityDescVisibility();
+
+        // ADMIN READ-ONLY CHECK
+        const currentUser = JSON.parse(localStorage.getItem('currentUser') || '{}');
+        const saveBtn = document.querySelector('#activityForm button[type="submit"]');
+        const clearBtn = document.getElementById('clearActivityBtn');
+        const inputs = modal.querySelectorAll('input, select, textarea');
+
+        // Logic: If Admin AND target != Admin's own ID -> Read Only
+        // Note: Admin's own employee ID usually matches their username or special ID.
+        // Safer check: If role is admin, simply block editing others.
+
+        let isReadOnly = false;
+        if (currentUser.role === 'admin' && currentUser.employeeId !== employeeId) {
+            isReadOnly = true;
+        }
+
+        if (isReadOnly) {
+            document.getElementById('activityModalTitle').textContent += ' (Read Only)';
+            saveBtn.style.display = 'none';
+            if (clearBtn) clearBtn.style.display = 'none';
+            inputs.forEach(input => input.disabled = true);
+        } else {
+            saveBtn.style.display = 'block';
+            if (clearBtn) clearBtn.style.display = 'block';
+            inputs.forEach(input => input.disabled = false);
+        }
+
         modal.classList.add('show');
-        document.getElementById('activityDescription').focus();
+        if (!isReadOnly) document.getElementById('activityDescription').focus();
     }
 
     closeActivityModal() {
@@ -645,6 +733,8 @@ class TimesheetManager {
     async handleEmployeeSubmit(e) {
         e.preventDefault();
         const name = document.getElementById('employeeName').value.trim();
+        const username = document.getElementById('employeeUsername').value.trim();
+        const password = document.getElementById('employeePassword').value.trim();
 
         if (!name) {
             alert('Please enter an employee name');
@@ -653,9 +743,14 @@ class TimesheetManager {
 
         try {
             if (this.editingEmployeeId) {
-                await this.updateEmployee(this.editingEmployeeId, name);
+                // For update, we might only update name, or also credentials if provided
+                await this.updateEmployee(this.editingEmployeeId, name, username, password);
             } else {
-                await this.addEmployee(name);
+                if (!username || !password) {
+                    alert('Please enter username and password for the new employee');
+                    return;
+                }
+                await this.addEmployee(name, username, password);
             }
             this.closeEmployeeModal();
         } catch (error) {
@@ -1265,6 +1360,17 @@ class ActivityTracker {
     }
 
     async init() {
+        const currentUser = JSON.parse(localStorage.getItem('currentUser') || '{}');
+        const trackerCard = document.querySelector('.activity-tracker-card');
+
+        if (currentUser.role !== 'admin') {
+            if (trackerCard) trackerCard.style.display = 'none';
+            // No need to load activities if hidden
+            return;
+        } else {
+            if (trackerCard) trackerCard.style.display = 'block';
+        }
+
         this.setupClearButton();
         await this.loadActivities();
         this.updateDisplay();
@@ -1300,6 +1406,13 @@ class ActivityTracker {
     setupClearButton() {
         const clearBtn = document.getElementById('clearTrackerBtn');
         if (clearBtn) {
+            // Check Role
+            const currentUser = JSON.parse(localStorage.getItem('currentUser') || '{}');
+            if (currentUser.role !== 'admin') {
+                clearBtn.style.display = 'none';
+                return;
+            }
+
             clearBtn.addEventListener('click', async () => {
                 if (confirm('Clear all activity history? This will permanently delete all logged activities.')) {
                     try {
